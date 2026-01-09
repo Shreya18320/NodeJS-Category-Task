@@ -27,9 +27,11 @@ app.use("/uploads", express.static("uploads"));
 
 const categoryRoutes = require("./src/routes/categoryRoutes");
 const subcategoryRoutes = require("./src/routes/subcategoryRoutes");
+const itemRoutes = require("./routes/itemsRoutes");
 
 app.use("/categories", categoryRoutes);
 app.use("/subcategories", subcategoryRoutes);
+app.use("/items", itemRoutes);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {

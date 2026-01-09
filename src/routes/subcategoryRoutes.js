@@ -4,7 +4,7 @@ const router = express.Router();
 const subcategoryController = require("../controllers/subcategory");
 
 router.get("/", subcategoryController.getSubCategories);
-router.get("/page", subcategoryController.getSubCategoriesWithpagination);
+router.get("/:category_id", subcategoryController.getSubCategoriesWithpagination);
 router.get("/search", subcategoryController.searchSubcategory);
 router.post("/", subcategoryController.addSubcategory);
 router.put("/:id", subcategoryController.updateSubcategory);
