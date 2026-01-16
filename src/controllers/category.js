@@ -1,99 +1,106 @@
 const response = require("../common/response");
-const db = require("../config/db");
+const Category = require("../models/categorymodel");
 
-// GET
-exports.getCategories = (req, res) => {
-  const sql = "SELECT * FROM categories";
+// ✅ import validators
+const {
+  validateCreateCategory,
+  validateUpdateCategory
+} = require("../validators/categoryvalidation");
 
-  db.query(sql, (err, result) => {
-    if (err) {
-      return response.sendError(res, "Failed to fetch categories");
-    }
-
-    return response.sendSuccess(res,"Categories fetched successfully", result);
-  });
+// ================= GET =================
+exports.getCategories = async (req, res) => {
+  try {
+    const result = await Category.findAll();
+    return response.sendSuccess(res, "Categories fetched successfully", result);
+  } catch (err) {
+    return response.sendError(res, "Failed to fetch categories", 500);
+  }
 };
 
-// POST
-
-exports.addCategory = (req, res) => {
-  const name = req.body.name;
-  const image = req.file ? req.file.filename : null;
-
-  if (!name || name.trim() === "") {
-    return response.sendError(res, "Name is required", 400);
-  }
-  if (!image) {
-    return response.sendError(res, "Image is required", 400);
-  }
-
-  const sql = "INSERT INTO categories (name, image) VALUES (?, ?)";
-
-  db.query(sql, [name, image], (err) => {
-    if (err) {
-      return response.sendError(res, "Failed to add category");
+// ================= POST =================
+exports.addCategory = async (req, res) => {
+  try {
+    // ✅ VALIDATION (common file se)
+    const error = validateCreateCategory(req);
+    if (error) {
+      return response.sendError(res, error, 400);
     }
 
-    return response.sendSuccess(res, "Category added successfully");
-  });
+    const name = req.body.name;
+
+    const image = req.file
+      ? `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`
+      : null;
+
+    const category = await Category.create({
+      name: name,
+      image: image
+    });
+
+    return response.sendSuccess(res, "Category added successfully", {
+      imageUrl: image,
+      data: category
+    });
+  } catch (err) {
+    console.log(err);
+    return response.sendError(res, "Failed to add category", 500);
+  }
 };
 
-
-// UPDATE
-exports.updateCategory = (req, res) => {
-  const id = req.params.id;
-  const name = req.body.name;
-  const image = req.file ? req.file.filename : null;
-
-  // Validation
-  if (!id) {
-    return response.sendError(res, "ID is required", 400);
-  }
-
-  if (!name || name.trim() === "") {
-    return response.sendError(res, "Name is required", 400);
-  }
-  
-
-  const sql = "UPDATE categories SET name = ?, image = ? WHERE id = ?";
-
-  db.query(sql, [name, image, id], (err, result) => {
-    if (err) {
-      return response.sendError(res, "Failed to update category");
+// ================= UPDATE =================
+exports.updateCategory = async (req, res) => {
+  try {
+    // ✅ VALIDATION (common file se)
+    const error = validateUpdateCategory(req);
+    if (error) {
+      return response.sendError(res, error, 400);
     }
 
-    // If ID not found
-    if (result.affectedRows === 0) {
+    const id = req.params.id;
+    const name = req.body.name;
+
+    const image = req.file
+      ? `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`
+      : null;
+
+    const updated = await Category.update(
+      { name: name, image: image },
+      { where: { id: id } }
+    );
+
+    if (updated[0] === 0) {
       return response.sendError(res, "Category not found", 404);
     }
 
-    return response.sendSuccess(res, "Category updated successfully");
-  });
+    return response.sendSuccess(res, "Category updated successfully", {
+      imageUrl: image
+    });
+  } catch (err) {
+    console.log(err);
+    return response.sendError(res, "Failed to update category", 500);
+  }
 };
 
+// ================= DELETE =================
+exports.deleteCategory = async (req, res) => {
+  try {
+    const id = req.params.id;
 
-// DELETE
-exports.deleteCategory = (req, res) => {
-  const id = req.params.id;
-
-  // Validation
-  if (!id) {
-    return response.sendError(res, "ID is required", 400);
-  }
-
-  const sql = "DELETE FROM categories WHERE id = ?";
-
-  db.query(sql, [id], (err, result) => {
-    if (err) {
-      return response.sendError(res, "Failed to delete category");
+    if (!id) {
+      return response.sendError(res, "ID is required", 400);
     }
 
-    // If ID not found
-    if (result.affectedRows === 0) {
+    const deleted = await Category.destroy({
+      where: { id: id }
+    });
+
+    if (!deleted) {
       return response.sendError(res, "Category not found", 404);
     }
 
     return response.sendSuccess(res, "Category deleted successfully");
-  });
+  } catch (err) {
+    console.log(err);
+    return response.sendError(res, "Failed to delete category", 500);
+  }
 };
-

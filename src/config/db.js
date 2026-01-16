@@ -1,20 +1,4 @@
-// const mysql = require("mysql"); 
 
-// const db = mysql.createConnection({ 
-//   host: "localhost",
-//   user: "root",
-//   password: "Mysql@1234",
-//   database: "category_db"
-// });
-
-// db.connect((err) => {  
-//   if (err) throw err;
-//   console.log("MySQL Connected");
-// });
-
-// module.exports = db;  
-
-// require("dotenv").config();
 const mysql = require("mysql");
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
