@@ -21,3 +21,13 @@ exports.validateUpdateCategory = (req) => {
 
   return null;
 };
+
+exports.validateDeleteCategory = (req) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return "Category ID is required";
+  }
+
+  return null;
+};

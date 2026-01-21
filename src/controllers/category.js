@@ -1,26 +1,52 @@
 const response = require("../common/response");
 const Category = require("../models/categorymodel");
+const Subcategory = require("../models/subcategorymodel");
+const Item = require("../models/itemsmodel");
 
-// ✅ import validators
+
 const {
   validateCreateCategory,
-  validateUpdateCategory
+  validateUpdateCategory,
+  validateDeleteCategory
 } = require("../validators/categoryvalidation");
 
-// ================= GET =================
+// GET ALL
+
 exports.getCategories = async (req, res) => {
   try {
-    const result = await Category.findAll();
-    return response.sendSuccess(res, "Categories fetched successfully", result);
+    const result = await Category.findAll({
+      include: [
+        {
+          model: Subcategory,
+          as: "subcategories",
+          required: false,
+          separate: true,     
+          include: [
+            {
+              model: Item,
+              as: "items",
+              separate: true   
+            }
+          ]
+        }
+      ]
+    });
+
+    return response.sendSuccess(
+      res,
+      "Categories fetched successfully with subcategories and items",
+      result
+    );
   } catch (err) {
+    console.log(err);
     return response.sendError(res, "Failed to fetch categories", 500);
   }
 };
 
-// ================= POST =================
+
+// CREATE
 exports.addCategory = async (req, res) => {
   try {
-    // ✅ VALIDATION (common file se)
     const error = validateCreateCategory(req);
     if (error) {
       return response.sendError(res, error, 400);
@@ -33,8 +59,8 @@ exports.addCategory = async (req, res) => {
       : null;
 
     const category = await Category.create({
-      name: name,
-      image: image
+      name,
+      image
     });
 
     return response.sendSuccess(res, "Category added successfully", {
@@ -47,10 +73,9 @@ exports.addCategory = async (req, res) => {
   }
 };
 
-// ================= UPDATE =================
+// UPDATE
 exports.updateCategory = async (req, res) => {
   try {
-    // ✅ VALIDATION (common file se)
     const error = validateUpdateCategory(req);
     if (error) {
       return response.sendError(res, error, 400);
@@ -64,8 +89,8 @@ exports.updateCategory = async (req, res) => {
       : null;
 
     const updated = await Category.update(
-      { name: name, image: image },
-      { where: { id: id } }
+      { name, image },
+      { where: { id } }
     );
 
     if (updated[0] === 0) {
@@ -81,17 +106,18 @@ exports.updateCategory = async (req, res) => {
   }
 };
 
-// ================= DELETE =================
+// DELETE
 exports.deleteCategory = async (req, res) => {
   try {
-    const id = req.params.id;
-
-    if (!id) {
-      return response.sendError(res, "ID is required", 400);
+    const error = validateDeleteCategory(req);
+    if (error) {
+      return response.sendError(res, error, 400);
     }
 
+    const id = req.params.id;
+
     const deleted = await Category.destroy({
-      where: { id: id }
+      where: { id }
     });
 
     if (!deleted) {

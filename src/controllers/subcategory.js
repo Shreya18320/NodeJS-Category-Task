@@ -1,41 +1,59 @@
 const response = require("../common/response");
 const Subcategory = require("../models/subcategorymodel");
 const Item = require("../models/itemsmodel");
+const { Op } = require("sequelize");
 
-// ✅ import validators
 const {
   validateCreateSubcategory,
-  validateUpdateSubcategory
+  validateUpdateSubcategory,
+  validateDeleteSubcategory,
+  validateSearchSubcategory,
+  validatePaginationSubcategory
 } = require("../validators/subcategoryvalidation");
 
-// ================= GET =================
+//get
 exports.getSubCategories = async (req, res) => {
   try {
-    const result = await Subcategory.findAll();
-    return response.sendSuccess(res, "Subcategories fetched successfully", result);
+    const result = await Subcategory.findAll({
+      include: [
+        {
+          model: Item,
+          as: "items",
+          required: true,
+          separate: true   
+        }
+      ]
+    });
+
+    return response.sendSuccess(
+      res,
+      "Subcategories fetched with items",
+      result
+    );
   } catch (err) {
     console.log(err);
     return response.sendError(res, "Failed to fetch subcategories", 500);
   }
 };
 
-// ================= PAGINATION =================
+// pagination
 exports.getSubCategoriesWithpagination = async (req, res) => {
   try {
+    const error = validatePaginationSubcategory(req);
+    if (error) {
+      return response.sendError(res, error, 400);
+    }
+
     const categoryId = req.params.category_id;
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 5;
     const offset = (page - 1) * limit;
 
-    if (!categoryId) {
-      return response.sendError(res, "Category ID is required", 400);
-    }
-
     const { count, rows } = await Subcategory.findAndCountAll({
       where: { category_id: categoryId },
-      limit: limit,
-      offset: offset
+      limit,
+      offset
     });
 
     const totalPages = Math.ceil(count / limit);
@@ -43,9 +61,9 @@ exports.getSubCategoriesWithpagination = async (req, res) => {
     return response.sendSuccess(res, "Subcategories fetched successfully", {
       pagination: {
         totalRecords: count,
-        totalPages: totalPages,
+        totalPages,
         currentPage: page,
-        limit: limit
+        limit
       },
       data: rows
     });
@@ -55,10 +73,9 @@ exports.getSubCategoriesWithpagination = async (req, res) => {
   }
 };
 
-// ================= POST =================
+// create
 exports.addSubcategory = async (req, res) => {
   try {
-    // ✅ VALIDATION
     const error = validateCreateSubcategory(req);
     if (error) {
       return response.sendError(res, error, 400);
@@ -67,8 +84,8 @@ exports.addSubcategory = async (req, res) => {
     const { name, category_id } = req.body;
 
     const subcategory = await Subcategory.create({
-      name: name,
-      category_id: category_id
+      name,
+      category_id
     });
 
     return response.sendSuccess(res, "Subcategory added successfully", subcategory);
@@ -78,10 +95,9 @@ exports.addSubcategory = async (req, res) => {
   }
 };
 
-// ================= UPDATE =================
+// update
 exports.updateSubcategory = async (req, res) => {
   try {
-    // ✅ VALIDATION
     const error = validateUpdateSubcategory(req);
     if (error) {
       return response.sendError(res, error, 400);
@@ -91,8 +107,8 @@ exports.updateSubcategory = async (req, res) => {
     const id = req.params.id;
 
     const updated = await Subcategory.update(
-      { name: name, category_id: category_id },
-      { where: { id: id } }
+      { name, category_id },
+      { where: { id } }
     );
 
     if (updated[0] === 0) {
@@ -106,17 +122,18 @@ exports.updateSubcategory = async (req, res) => {
   }
 };
 
-// ================= DELETE =================
+// delete
 exports.deleteSubcategory = async (req, res) => {
   try {
-    const id = req.params.id;
-
-    if (!id) {
-      return response.sendError(res, "Subcategory ID is required", 400);
+    const error = validateDeleteSubcategory(req);
+    if (error) {
+      return response.sendError(res, error, 400);
     }
 
+    const id = req.params.id;
+
     const deleted = await Subcategory.destroy({
-      where: { id: id }
+      where: { id }
     });
 
     if (!deleted) {
@@ -130,27 +147,30 @@ exports.deleteSubcategory = async (req, res) => {
   }
 };
 
-// ================= SEARCH =================
+// search
 exports.searchSubcategory = async (req, res) => {
   try {
-    const search = req.query.search || "";
-
-    if (!search || search.trim() === "") {
-      return response.sendError(res, "Search text is required", 400);
+    const error = validateSearchSubcategory(req);
+    if (error) {
+      return response.sendError(res, error, 400);
     }
+
+    const search = req.query.search;
 
     const result = await Subcategory.findAll({
       where: {
         name: {
-          [require("sequelize").Op.like]: `%${search}%`
+          [Op.like]: `%${search}%`
         }
       },
       include: [
-        {
-          model: Item,
-          required: true
-        }
-      ]
+  {
+    model: Item,
+    as: "items",     
+    required: true
+  }
+]
+
     });
 
     return response.sendSuccess(res, "Search result fetched successfully", result);

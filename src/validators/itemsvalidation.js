@@ -31,3 +31,14 @@ exports.validateCreateItem = (req) => {
 exports.validateUpdateItem = (req) => {
   return exports.validateCreateItem(req);
 };
+
+
+exports.validateDeleteItem = (req) => {
+  const { id } = req.params;
+
+  if (!id || isNaN(id)) {
+    return "Valid Item ID is required";
+  }
+
+  return null;
+};

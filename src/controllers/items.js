@@ -1,25 +1,38 @@
 const response = require("../common/response");
 const Item = require("../models/itemsmodel");
 
-// ✅ import validators
 const {
   validateCreateItem,
-  validateUpdateItem
+  validateUpdateItem,
+  validateDeleteItem
 } = require("../validators/itemsvalidation");
 
-// ================= GET + SORT =================
+// GET + SORTING (ONLY ITEMS)
 exports.getItems = async (req, res) => {
   try {
-    let sortBy = req.query.sortBy || "id";
-    let order = req.query.order || "ASC";
+    let { sortBy, order } = req.query;
 
-    const allowedSort = ["id", "name", "price", "rating", "stock", "created_at"];
+    const allowedSort = ["id", "name", "price", "rating", "stock"];
+
+    sortBy = sortBy || "id";
+    order = order || "ASC";
 
     if (!allowedSort.includes(sortBy)) {
-      sortBy = "id";
+      return response.sendError(
+        res,
+        `Invalid sort field. Allowed fields are: ${allowedSort.join(", ")}`,
+        400
+      );
     }
 
-    order = order.toUpperCase() === "DESC" ? "DESC" : "ASC";
+    order = order.toUpperCase();
+    if (order !== "ASC" && order !== "DESC") {
+      return response.sendError(
+        res,
+        "Invalid order value. Only ASC or DESC is allowed.",
+        400
+      );
+    }
 
     const items = await Item.findAll({
       order: [[sortBy, order]]
@@ -30,16 +43,16 @@ exports.getItems = async (req, res) => {
       order,
       data: items
     });
+
   } catch (err) {
     console.log(err);
     return response.sendError(res, "Failed to fetch items", 500);
   }
 };
 
-// ================= POST =================
+// CREATE
 exports.addItem = async (req, res) => {
   try {
-    // ✅ VALIDATION
     const error = validateCreateItem(req);
     if (error) {
       return response.sendError(res, error, 400);
@@ -62,10 +75,9 @@ exports.addItem = async (req, res) => {
   }
 };
 
-// ================= UPDATE =================
+// UPDATE
 exports.updateItem = async (req, res) => {
   try {
-    // ✅ VALIDATION
     const error = validateUpdateItem(req);
     if (error) {
       return response.sendError(res, error, 400);
@@ -96,14 +108,15 @@ exports.updateItem = async (req, res) => {
   }
 };
 
-// ================= DELETE =================
+// DELETE
 exports.deleteItem = async (req, res) => {
   try {
-    const id = req.params.id;
-
-    if (!id || isNaN(id)) {
-      return response.sendError(res, "Valid Item ID is required", 400);
+    const error = validateDeleteItem(req);
+    if (error) {
+      return response.sendError(res, error, 400);
     }
+
+    const id = req.params.id;
 
     const deleted = await Item.destroy({
       where: { id }
