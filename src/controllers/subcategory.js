@@ -14,59 +14,58 @@ const {
 //get
 exports.getSubCategories = async (req, res) => {
   try {
-    const result = await Subcategory.findAll({
-      include: [
-        {
-          model: Item,
-          as: "items",
-          required: true,
-          separate: true   
-        }
-      ]
-    });
-
-    return response.sendSuccess(
-      res,
-      "Subcategories fetched with items",
-      result
-    );
-  } catch (err) {
-    console.log(err);
-    return response.sendError(res, "Failed to fetch subcategories", 500);
-  }
-};
-
-// pagination
-exports.getSubCategoriesWithpagination = async (req, res) => {
-  try {
     const error = validatePaginationSubcategory(req);
     if (error) {
       return response.sendError(res, error, 400);
     }
 
-    const categoryId = req.params.category_id;
+    const page = req.query.page;
+    const limit = req.query.limit;
 
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 5;
-    const offset = (page - 1) * limit;
+   
+    const queryOptions = {
+      attributes: ["id", "name"],
+      include: [
+        {
+          model: Item,
+          as: "items",
+          required: false,
+          separate: true,
+          attributes: ["id", "name", "price", "stock", "rating"]
+        }
+      ]
+    };
 
-    const { count, rows } = await Subcategory.findAndCountAll({
-      where: { category_id: categoryId },
-      limit,
-      offset
-    });
+   
+    if (page || limit) {
+      const pageNumber = parseInt(page) || 1;
+      const pageLimit = parseInt(limit) || 5;
+      const offset = (pageNumber - 1) * pageLimit;
 
-    const totalPages = Math.ceil(count / limit);
+      const { count, rows } = await Subcategory.findAndCountAll({
+        ...queryOptions,
+        limit: pageLimit,
+        offset
+      });
 
-    return response.sendSuccess(res, "Subcategories fetched successfully", {
-      pagination: {
-        totalRecords: count,
-        totalPages,
-        currentPage: page,
-        limit
-      },
-      data: rows
-    });
+      const totalPages = Math.ceil(count / pageLimit);
+
+      return response.sendSuccess(res, "Subcategories fetched with pagination", {
+        pagination: {
+          totalRecords: count,
+          totalPages,
+          currentPage: pageNumber,
+          limit: pageLimit
+        },
+        data: rows
+      });
+    }
+
+    
+    const rows = await Subcategory.findAll(queryOptions);
+
+    return response.sendSuccess(res, "All subcategories fetched", rows);
+
   } catch (err) {
     console.log(err);
     return response.sendError(res, "Failed to fetch subcategories", 500);

@@ -2,12 +2,13 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const sequelize = require("./src/config/sequelize");
-// 🔥 LOAD MODELS
+
 const Category = require("./src/models/categorymodel");
 const Subcategory = require("./src/models/subcategorymodel");
 const Item = require("./src/models/itemsmodel");
 
-// 🔥 ATTACH RELATIONS
+
+
 const models = { Category, Subcategory, Item };
 
 Object.values(models).forEach((model) => {

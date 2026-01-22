@@ -1,5 +1,6 @@
 const response = require("../common/response");
 const Item = require("../models/itemsmodel");
+const { Op } = require("sequelize");
 
 const {
   validateCreateItem,
@@ -7,10 +8,11 @@ const {
   validateDeleteItem
 } = require("../validators/itemsvalidation");
 
-// GET + SORTING (ONLY ITEMS)
+// get + shorting
+
 exports.getItems = async (req, res) => {
   try {
-    let { sortBy, order } = req.query;
+    let { sortBy, order, date } = req.query;
 
     const allowedSort = ["id", "name", "price", "rating", "stock"];
 
@@ -34,11 +36,34 @@ exports.getItems = async (req, res) => {
       );
     }
 
+    // date
+    let whereClause = {};
+
+    if (date) {
+      let searchDate = "";
+
+      if (date === "today") {
+        const today = new Date();
+        searchDate = today.toISOString().split("T")[0]; 
+      } else {
+        searchDate = date; 
+      }
+
+      whereClause.created_at = {
+        [Op.between]: [
+          `${searchDate} 00:00:00`,
+          `${searchDate} 23:59:59`
+        ]
+      };
+    }
+
     const items = await Item.findAll({
+      where: whereClause,
       order: [[sortBy, order]]
     });
 
     return response.sendSuccess(res, "Items fetched successfully", {
+      filterDate: date || "all",
       sortBy,
       order,
       data: items
@@ -49,6 +74,7 @@ exports.getItems = async (req, res) => {
     return response.sendError(res, "Failed to fetch items", 500);
   }
 };
+
 
 // CREATE
 exports.addItem = async (req, res) => {

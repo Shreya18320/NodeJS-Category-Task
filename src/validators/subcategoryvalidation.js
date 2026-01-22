@@ -52,11 +52,16 @@ exports.validateSearchSubcategory = (req) => {
 
 // pagination
 exports.validatePaginationSubcategory = (req) => {
-  const { category_id } = req.params;
+  const { page, limit } = req.query;
 
-  if (!category_id) {
-    return "Category ID is required";
+  if (page && isNaN(page)) {
+    return "Page must be a number";
   }
 
+  if (limit && isNaN(limit)) {
+    return "Limit must be a number";
+  }
+
+  
   return null;
 };

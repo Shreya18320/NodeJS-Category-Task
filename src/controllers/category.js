@@ -15,17 +15,21 @@ const {
 exports.getCategories = async (req, res) => {
   try {
     const result = await Category.findAll({
+      attributes: ["id", "name", "image"],
+
       include: [
         {
           model: Subcategory,
           as: "subcategories",
           required: false,
-          separate: true,     
+          separate: true,
+          attributes: ["id", "name"],      
           include: [
             {
               model: Item,
               as: "items",
-              separate: true   
+              separate: true,
+              attributes: ["id", "name", "price","stock","rating"] 
             }
           ]
         }
