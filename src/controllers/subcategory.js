@@ -1,6 +1,9 @@
 const response = require("../common/response");
 const Subcategory = require("../models/subcategorymodel");
 const Item = require("../models/itemsmodel");
+const Offer = require("../models/offermodel");
+
+
 const { Op } = require("sequelize");
 
 const {
@@ -11,7 +14,7 @@ const {
   validatePaginationSubcategory
 } = require("../validators/subcategoryvalidation");
 
-//get
+//get and pagination
 exports.getSubCategories = async (req, res) => {
   try {
     const error = validatePaginationSubcategory(req);
@@ -22,7 +25,6 @@ exports.getSubCategories = async (req, res) => {
     const page = req.query.page;
     const limit = req.query.limit;
 
-   
     const queryOptions = {
       attributes: ["id", "name"],
       include: [
@@ -32,11 +34,24 @@ exports.getSubCategories = async (req, res) => {
           required: false,
           separate: true,
           attributes: ["id", "name", "price", "stock", "rating"]
+        },
+        {
+          model: Offer,
+          as: "offers",
+          required: false,
+          separate: true,
+          attributes: [
+            "id",
+            "title",
+            "discount_type",
+            "discount_value",
+            "start_date",
+            "end_date"
+          ]
         }
       ]
     };
 
-   
     if (page || limit) {
       const pageNumber = parseInt(page) || 1;
       const pageLimit = parseInt(limit) || 5;
@@ -61,7 +76,6 @@ exports.getSubCategories = async (req, res) => {
       });
     }
 
-    
     const rows = await Subcategory.findAll(queryOptions);
 
     return response.sendSuccess(res, "All subcategories fetched", rows);
@@ -72,7 +86,7 @@ exports.getSubCategories = async (req, res) => {
   }
 };
 
-// create
+// post
 exports.addSubcategory = async (req, res) => {
   try {
     const error = validateCreateSubcategory(req);
@@ -163,13 +177,17 @@ exports.searchSubcategory = async (req, res) => {
         }
       },
       include: [
-  {
-    model: Item,
-    as: "items",     
-    required: true
-  }
-]
-
+        {
+          model: Item,
+          as: "items",
+          required: false
+        },
+        {
+          model: Offer,
+          as: "offers",
+          required: false
+        }
+      ]
     });
 
     return response.sendSuccess(res, "Search result fetched successfully", result);

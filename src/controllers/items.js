@@ -40,13 +40,19 @@ exports.getItems = async (req, res) => {
     let whereClause = {};
 
     if (date) {
+
+
+      if (date !== "today" && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return response.sendError(res, "Date must be in YYYY-MM-DD format", 400);
+      }
+
       let searchDate = "";
 
       if (date === "today") {
         const today = new Date();
-        searchDate = today.toISOString().split("T")[0]; 
+        searchDate = today.toISOString().split("T")[0];
       } else {
-        searchDate = date; 
+        searchDate = date;
       }
 
       whereClause.created_at = {
@@ -62,6 +68,15 @@ exports.getItems = async (req, res) => {
       order: [[sortBy, order]]
     });
 
+
+    if (date && items.length === 0) {
+      return response.sendError(
+        res,
+        "No items found for the selected date",
+        404
+      );
+    }
+
     return response.sendSuccess(res, "Items fetched successfully", {
       filterDate: date || "all",
       sortBy,
@@ -76,7 +91,7 @@ exports.getItems = async (req, res) => {
 };
 
 
-// CREATE
+// post
 exports.addItem = async (req, res) => {
   try {
     const error = validateCreateItem(req);
@@ -101,7 +116,7 @@ exports.addItem = async (req, res) => {
   }
 };
 
-// UPDATE
+// update
 exports.updateItem = async (req, res) => {
   try {
     const error = validateUpdateItem(req);
@@ -134,7 +149,7 @@ exports.updateItem = async (req, res) => {
   }
 };
 
-// DELETE
+// delete
 exports.deleteItem = async (req, res) => {
   try {
     const error = validateDeleteItem(req);

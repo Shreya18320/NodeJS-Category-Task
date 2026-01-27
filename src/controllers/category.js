@@ -2,6 +2,7 @@ const response = require("../common/response");
 const Category = require("../models/categorymodel");
 const Subcategory = require("../models/subcategorymodel");
 const Item = require("../models/itemsmodel");
+const Offer = require("../models/offermodel");
 
 
 const {
@@ -16,20 +17,32 @@ exports.getCategories = async (req, res) => {
   try {
     const result = await Category.findAll({
       attributes: ["id", "name", "image"],
-
       include: [
         {
           model: Subcategory,
           as: "subcategories",
           required: false,
           separate: true,
-          attributes: ["id", "name"],      
+          attributes: ["id", "name"],
           include: [
             {
               model: Item,
               as: "items",
               separate: true,
-              attributes: ["id", "name", "price","stock","rating"] 
+              attributes: ["id", "name", "price", "stock", "rating"]
+            },
+            {
+              model: Offer,
+              as: "offers",
+              separate: true,
+              attributes: [
+                "id",
+                "title",
+                "discount_type",
+                "discount_value",
+                "start_date",
+                "end_date"
+              ]
             }
           ]
         }
@@ -38,7 +51,7 @@ exports.getCategories = async (req, res) => {
 
     return response.sendSuccess(
       res,
-      "Categories fetched successfully with subcategories and items",
+      "Categories fetched successfully with subcategories, items and offers",
       result
     );
   } catch (err) {

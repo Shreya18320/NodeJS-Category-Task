@@ -1,67 +1,115 @@
+const Joi = require("joi");
+const { deleteCategory } = require("../controllers/category");
+
 // create
+
 exports.validateCreateSubcategory = (req) => {
-  const { name, category_id } = req.body;
+  const schema = Joi.object({
+    name: Joi.string()
+      .min(2)
+      .max(100)
+      .trim()
+      .required()
+      .messages({
+        "string.empty": "Subcategory name is required",
+        "string.min": "Subcategory name must be at least 2 characters",
+        "string.max": "Subcategory name cannot exceed 100 characters",
+        "any.required": "Subcategory name is required"
+      }),
 
-  if (!name || name.trim() === "") {
-    return "Subcategory name is required";
-  }
+    category_id: Joi.number()
+      .integer()
+      .required()
+      .messages({
+        "number.base": "Category ID must be a number",
+        "any.required": "Category ID is required"
+      })
+  });
 
-  if (!category_id) {
-    return "Category ID is required";
-  }
+  const { error } = schema.validate(req.body);
+  if (error) return error.details[0].message;
 
   return null;
 };
 
 // update
+
 exports.validateUpdateSubcategory = (req) => {
-  const { name, category_id } = req.body;
+  const schema = Joi.object({
+    name: Joi.string()
+      .min(2)
+      .max(100)
+      .trim()
+      .required()
+      .messages({
+        "string.empty": "Subcategory name is required",
+        "string.min": "Subcategory name must be at least 2 characters",
+        "string.max": "Subcategory name cannot exceed 100 characters"
+      }),
 
-  if (!name || name.trim() === "") {
-    return "Subcategory name is required";
-  }
+    category_id: Joi.number()
+      .integer()
+      .required()
+      .messages({
+        "number.base": "Category ID must be a number",
+        "any.required": "Category ID is required"
+      })
+  });
 
-  if (!category_id) {
-    return "Category ID is required";
-  }
+  const { error } = schema.validate(req.body);
+  if (error) return error.details[0].message;
 
   return null;
 };
 
 // delete
-exports.validateDeleteSubcategory = (req) => {
-  const { id } = req.params;
 
-  if (!id) {
-    return "Subcategory ID is required";
-  }
+exports.validateDeleteSubcategory = (req) => {
+  const schema = Joi.object({
+    id: Joi.number().integer().required().messages({
+      "number.base": "Subcategory ID must be a number",
+      "any.required": "Subcategory ID is required"
+    })
+  });
+
+  const { error } = schema.validate(req.params);
+  if (error) return error.details[0].message;
 
   return null;
 };
 
 // search
-exports.validateSearchSubcategory = (req) => {
-  const { search } = req.query;
 
-  if (!search || search.trim() === "") {
-    return "Search text is required";
-  }
+exports.validateSearchSubcategory = (req) => {
+  const schema = Joi.object({
+    search: Joi.string().trim().min(1).required().messages({
+      "string.empty": "Search text is required",
+      "any.required": "Search text is required"
+    })
+  });
+
+  const { error } = schema.validate(req.query);
+  if (error) return error.details[0].message;
 
   return null;
 };
 
-// pagination
+// paggination
+
 exports.validatePaginationSubcategory = (req) => {
-  const { page, limit } = req.query;
+  const schema = Joi.object({
+    page: Joi.number().integer().min(1).optional().messages({
+      "number.base": "Page must be a number",
+      "number.min": "Page must be at least 1"
+    }),
+    limit: Joi.number().integer().min(1).optional().messages({
+      "number.base": "Limit must be a number",
+      "number.min": "Limit must be at least 1"
+    })
+  });
 
-  if (page && isNaN(page)) {
-    return "Page must be a number";
-  }
+  const { error } = schema.validate(req.query);
+  if (error) return error.details[0].message;
 
-  if (limit && isNaN(limit)) {
-    return "Limit must be a number";
-  }
-
-  
   return null;
 };

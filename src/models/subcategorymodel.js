@@ -1,43 +1,34 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/sequelize");
-const Category = require("./categorymodel"); 
-const Item = require("./itemsmodel"); 
-
 
 const Subcategory = sequelize.define("subcategories", {
-   id: {
+  id: {
     type: DataTypes.INTEGER,
     primaryKey: true
   },
-  
-  category_id: {
-    type: DataTypes.INTEGER
-  },
-
-  name: {
-    type: DataTypes.STRING
-  }
+  category_id: DataTypes.INTEGER,
+  name: DataTypes.STRING
 }, {
   timestamps: false,
   freezeTableName: true
 });
 
-
-
-// relations
-
-Subcategory.relations = (models) => {
+Subcategory.associate = (models) => {
+  // parent
   Subcategory.belongsTo(models.Category, {
     foreignKey: "category_id"
   });
 
+  // children
   Subcategory.hasMany(models.Item, {
     foreignKey: "subcategory_id",
     as: "items"
   });
+
+  Subcategory.hasMany(models.Offer, {
+    foreignKey: "subcategory_id",
+    as: "offers"
+  });
 };
 
-
 module.exports = Subcategory;
-
-
