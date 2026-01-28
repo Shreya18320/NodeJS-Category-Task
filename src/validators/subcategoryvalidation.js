@@ -97,19 +97,11 @@ exports.validateSearchSubcategory = (req) => {
 // paggination
 
 exports.validatePaginationSubcategory = (req) => {
-  const schema = Joi.object({
-    page: Joi.number().integer().min(1).optional().messages({
-      "number.base": "Page must be a number",
-      "number.min": "Page must be at least 1"
-    }),
-    limit: Joi.number().integer().min(1).optional().messages({
-      "number.base": "Limit must be a number",
-      "number.min": "Limit must be at least 1"
-    })
+ const schema = Joi.object({
+    page: Joi.number().integer().min(1).optional(),
+    limit: Joi.number().integer().min(1).optional(),
+    search: Joi.string().allow("").optional()   
   });
 
-  const { error } = schema.validate(req.query);
-  if (error) return error.details[0].message;
-
-  return null;
-};
+  return schema.validate(req.query).error?.message;
+}

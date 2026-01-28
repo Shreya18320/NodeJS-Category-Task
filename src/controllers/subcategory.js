@@ -10,11 +10,11 @@ const {
   validateCreateSubcategory,
   validateUpdateSubcategory,
   validateDeleteSubcategory,
-  validateSearchSubcategory,
   validatePaginationSubcategory
 } = require("../validators/subcategoryvalidation");
 
-//get and pagination
+//get and pagination + searching
+
 exports.getSubCategories = async (req, res) => {
   try {
     const error = validatePaginationSubcategory(req);
@@ -22,11 +22,20 @@ exports.getSubCategories = async (req, res) => {
       return response.sendError(res, error, 400);
     }
 
-    const page = req.query.page;
-    const limit = req.query.limit;
+    const { page, limit, search } = req.query;
+
+    //WHERE clause for search
+    let whereClause = {};
+
+    if (search) {
+      whereClause.name = {
+        [Op.like]: `%${search}%`
+      };
+    }
 
     const queryOptions = {
       attributes: ["id", "name"],
+      where: whereClause,  
       include: [
         {
           model: Item,
@@ -52,6 +61,7 @@ exports.getSubCategories = async (req, res) => {
       ]
     };
 
+    // If pagination is used
     if (page || limit) {
       const pageNumber = parseInt(page) || 1;
       const pageLimit = parseInt(limit) || 5;
@@ -65,7 +75,7 @@ exports.getSubCategories = async (req, res) => {
 
       const totalPages = Math.ceil(count / pageLimit);
 
-      return response.sendSuccess(res, "Subcategories fetched with pagination", {
+      return response.sendSuccess(res, "Subcategories fetched successfully", {
         pagination: {
           totalRecords: count,
           totalPages,
@@ -76,9 +86,10 @@ exports.getSubCategories = async (req, res) => {
       });
     }
 
+    // Without pagination
     const rows = await Subcategory.findAll(queryOptions);
 
-    return response.sendSuccess(res, "All subcategories fetched", rows);
+    return response.sendSuccess(res, "Subcategories fetched successfully", rows);
 
   } catch (err) {
     console.log(err);
@@ -161,38 +172,38 @@ exports.deleteSubcategory = async (req, res) => {
 };
 
 // search
-exports.searchSubcategory = async (req, res) => {
-  try {
-    const error = validateSearchSubcategory(req);
-    if (error) {
-      return response.sendError(res, error, 400);
-    }
+// exports.searchSubcategory = async (req, res) => {
+//   try {
+//     const error = validateSearchSubcategory(req);
+//     if (error) {
+//       return response.sendError(res, error, 400);
+//     }
 
-    const search = req.query.search;
+//     const search = req.query.search;
 
-    const result = await Subcategory.findAll({
-      where: {
-        name: {
-          [Op.like]: `%${search}%`
-        }
-      },
-      include: [
-        {
-          model: Item,
-          as: "items",
-          required: false
-        },
-        {
-          model: Offer,
-          as: "offers",
-          required: false
-        }
-      ]
-    });
+//     const result = await Subcategory.findAll({
+//       where: {
+//         name: {
+//           [Op.like]: `%${search}%`
+//         }
+//       },
+//       include: [
+//         {
+//           model: Item,
+//           as: "items",
+//           required: false
+//         },
+//         {
+//           model: Offer,
+//           as: "offers",
+//           required: false
+//         }
+//       ]
+//     });
 
-    return response.sendSuccess(res, "Search result fetched successfully", result);
-  } catch (err) {
-    console.log(err);
-    return response.sendError(res, "Search failed", 500);
-  }
-};
+//     return response.sendSuccess(res, "Search result fetched successfully", result);
+//   } catch (err) {
+//     console.log(err);
+//     return response.sendError(res, "Search failed", 500);
+//   }
+// };

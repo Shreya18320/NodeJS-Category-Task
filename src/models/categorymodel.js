@@ -9,7 +9,7 @@ const Category = sequelize.define("categories", {
   name: DataTypes.STRING,
   image: DataTypes.STRING
 }, {
-  timestamps: false,
+  timestamps: true,
   freezeTableName: true
 });
 

@@ -50,7 +50,7 @@ exports.getItems = async (req, res) => {
 
       if (date === "today") {
         const today = new Date();
-        searchDate = today.toISOString().split("T")[0];
+        searchDate = today.toISOString();
       } else {
         searchDate = date;
       }
