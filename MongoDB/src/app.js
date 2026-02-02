@@ -1,11 +1,12 @@
 const express = require("express");
-require("./config/db");
-
 const app = express();
+const path = require("path");
+
 
 app.use(express.json());
 
-// category routes
-app.use("/api/category", require("../routes/category.routes"));
+app.use("/category", require("./routes/category.routes"));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
 
 module.exports = app;

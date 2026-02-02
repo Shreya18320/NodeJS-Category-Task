@@ -1,5 +1,9 @@
 const mongoose = require("mongoose");
 
-mongoose.connect("mongodb://localhost:27017/shop");
-
-module.exports = mongoose;
+mongoose.connect("mongodb://127.0.0.1:27017/shop")
+  .then(() => {
+    console.log("MongoDB Connected");
+  })
+  .catch((err) => {
+    console.log("MongoDB Error:", err.message);
+  });
