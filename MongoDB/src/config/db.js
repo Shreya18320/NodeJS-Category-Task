@@ -1,9 +1,10 @@
 const mongoose = require("mongoose");
 
-mongoose.connect("mongodb://127.0.0.1:27017/shop")
+mongoose
+  .connect(process.env.MONGO_URI)
   .then(() => {
-    console.log("MongoDB Connected");
+    console.log("MongoDB connected");
   })
   .catch((err) => {
-    console.log("MongoDB Error:", err.message);
+    console.error("MongoDB connection error:", err.message);
   });

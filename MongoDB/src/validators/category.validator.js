@@ -48,7 +48,7 @@ exports.updateCategoryValidation = (req, res, next) => {
   next();
 };
 
-//delete
+//delet + get
 
 exports.validateObjectId = (req, res, next) => {
   const schema = Joi.object({
