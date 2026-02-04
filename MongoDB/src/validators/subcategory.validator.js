@@ -44,7 +44,7 @@ exports.updateSubcategoryValidation = (req, res, next) => {
   next();
 };
 
-// get + delete
+//delete
 exports.validateObjectId = (req, res, next) => {
   const schema = Joi.object({
     id: Joi.string().hex().length(24).required()
@@ -57,3 +57,33 @@ exports.validateObjectId = (req, res, next) => {
 
   next();
 };
+
+// pagination
+
+// search + sort + pagination (GET all)
+exports.subcategoryListValidation = (req, res, next) => {
+  const schema = Joi.object({
+    // pagination
+    page: Joi.number().integer().min(1).optional(),
+    limit: Joi.number().integer().min(1).max(100).optional(),
+
+    // searching
+    search: Joi.string().trim().min(1).optional(),
+    category_id: Joi.string().hex().length(24).optional(),
+
+    // sorting
+    sort: Joi.string().valid("name", "createdAt").optional(),
+    order: Joi.string().valid("asc", "desc").optional(),
+  });
+
+  const { error } = schema.validate(req.query);
+  if (error) {
+    return response.error(res, 400, error.details[0].message);
+  }
+
+  next();
+};
+
+
+
+

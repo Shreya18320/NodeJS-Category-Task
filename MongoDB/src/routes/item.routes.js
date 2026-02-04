@@ -5,10 +5,11 @@ const itemController = require("../controllers/item.controller");
 const {
   createItemValidation,
   updateItemValidation,
-  validateObjectId
+  validateObjectId,
+  itemListValidation
 } = require("../validators/items.validator");
 
-router.get("/all", itemController.getItems);
+router.get("/all",itemListValidation,itemController.getItems);
 
 router.post("/create",createItemValidation,itemController.createItem);
 

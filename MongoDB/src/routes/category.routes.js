@@ -10,7 +10,7 @@ const {
 } = require("../validators/category.validator");
 
 
-router.get("/all", validateObjectId, categoryController.getCategories);
+router.get("/all", categoryController.getCategories);
 router.post("/create", upload.single("img"),createCategoryValidation,categoryController.createCategory);
 router.put("/update/:id", upload.single("img"),updateCategoryValidation,categoryController.updateCategory);
 router.delete("/delete/:id", validateObjectId, categoryController.deleteCategory);

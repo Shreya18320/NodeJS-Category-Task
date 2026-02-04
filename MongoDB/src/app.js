@@ -9,6 +9,7 @@ app.use("/category", require("./routes/category.routes"));
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use("/subcategory", require("./routes/subcategory.routes"));
 app.use("/item", require("./routes/item.routes"));
+app.use("/offer",require("./routes/offer.routes"));
 
 
 module.exports = app;

@@ -1,4 +1,3 @@
-// src/models/subcategory.model.js
 const mongoose = require("mongoose");
 
 const subcategorySchema = new mongoose.Schema(
@@ -20,5 +19,23 @@ const subcategorySchema = new mongoose.Schema(
      timestamps: false 
     }
 );
+
+
+subcategorySchema.virtual("items", {
+  ref: "Item",
+  localField: "_id",
+  foreignField: "subcategory_id",
+});
+
+
+subcategorySchema.virtual("offers", {
+  ref: "Offer",
+  localField: "_id",
+  foreignField: "subcategory_id",
+});
+
+
+subcategorySchema.set("toJSON", { virtuals: true });
+subcategorySchema.set("toObject", { virtuals: true });
 
 module.exports = mongoose.model("Subcategory", subcategorySchema);

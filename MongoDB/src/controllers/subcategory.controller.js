@@ -1,6 +1,7 @@
-// src/controllers/subcategory.controller.js
+
 const Subcategory = require("../models/subcategory.model");
 const response = require("../common/response");
+
 
 // create
 exports.createSubcategory = async (req, res) => {
@@ -22,14 +23,63 @@ exports.createSubcategory = async (req, res) => {
 };
 
 // get
+
 exports.getSubcategories = async (req, res) => {
   try {
-    const list = await Subcategory.find();
-    return response.success(res, 200, "Subcategory list", list);
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      category_id,
+      sort,
+      order,
+    } = req.query;
+
+    const skip = (page - 1) * limit;
+
+    
+    let subcategoryQuery = {};
+
+    if (search) {
+      subcategoryQuery.name = { $regex: search, $options: "i" };
+    }
+
+    if (category_id) {
+      subcategoryQuery.category_id = category_id;
+    }
+
+    // sorting
+    let sortObj = {};
+    if (sort) {
+      sortObj[sort] = order === "desc" ? -1 : 1;
+    }
+
+    const subcategories = await Subcategory.find(subcategoryQuery)
+      .skip(skip)
+      .limit(Number(limit))
+      .sort(sortObj)
+      .populate([
+        { path: "items" },
+        { path: "offers" },
+      ]);
+
+    const total = await Subcategory.countDocuments(subcategoryQuery);
+
+    return response.success(res, 200, "Subcategory with items and offers", {
+      pagination: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(total / limit),
+      },
+      data: subcategories,
+    });
+
   } catch (error) {
     return response.error(res, 500, error.message);
   }
 };
+
 
 // update
 exports.updateSubcategory = async (req, res) => {

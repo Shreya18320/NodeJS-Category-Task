@@ -24,7 +24,13 @@ exports.createCategory = async (req, res) => {
 // get
 exports.getCategories = async (req, res) => {
   try {
-    const categories = await Category.find();
+    const categories = await Category.find().populate({
+      path: "subcategories",
+      populate: [
+        { path: "items" },
+        { path: "offers" },
+      ],
+    });
     return response.success(res, 200, "Category list", categories);
   } catch (error) {
     return response.error(res, 500, error.message);

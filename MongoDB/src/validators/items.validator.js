@@ -63,3 +63,33 @@ exports.validateObjectId = (req, res, next) => {
 
   next();
 };
+
+
+// get items (pagination + search + sort)
+exports.itemListValidation = (req, res, next) => {
+  const schema = Joi.object({
+    page: Joi.number().integer().min(1).optional(),
+    limit: Joi.number().integer().min(1).max(100).optional(),
+
+    search: Joi.string().trim().optional(),
+    subcategory_id: Joi.string().hex().length(24).optional(),
+
+    minPrice: Joi.number().min(0).optional(),
+    maxPrice: Joi.number().min(0).optional(),
+
+    rating: Joi.number().min(0).max(5).optional(),
+    inStock: Joi.boolean().optional(),
+
+    sort: Joi.string()
+      .valid("price", "rating", "name", "createdAt")
+      .optional(),
+    order: Joi.string().valid("asc", "desc").optional(),
+  });
+
+  const { error } = schema.validate(req.query);
+  if (error) {
+    return response.error(res, 400, error.details[0].message);
+  }
+
+  next();
+};
